@@ -37,6 +37,10 @@ int DeadlineToTimeoutMillis(const gpr_timespec deadline) {
 ::grpc::Status PredictionServiceImpl::Predict(::grpc::ServerContext *context,
                                               const PredictRequest *request,
                                               PredictResponse *response) {
+  // weird bug... I have to use tmp to print log info...
+  PredictRequest tmp = *request;
+  LOG(INFO) << "[Yitao] *** Predict() is called for model " << tmp.model_spec().name() << "! ***";
+
   tensorflow::RunOptions run_options = tensorflow::RunOptions();
   run_options.set_timeout_in_ms(
       DeadlineToTimeoutMillis(context->raw_deadline()));
