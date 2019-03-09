@@ -1,18 +1,8 @@
 workspace(name = "tf_serving")
 
-# To update TensorFlow to a new revision.
-# 1. Update the 'git_commit' args below to include the new git hash.
-# 2. Get the sha256 hash of the archive with a command such as...
-#    curl -L https://github.com/tensorflow/tensorflow/archive/<git hash>.tar.gz | sha256sum
-#    and update the 'sha256' arg with the result.
-# 3. Request the new archive to be mirrored on mirror.bazel.build for more
-#    reliable downloads.
-load("//tensorflow_serving:repo.bzl", "tensorflow_http_archive")
-
-tensorflow_http_archive(
+local_repository(
     name = "org_tensorflow",
-    sha256 = "9345658274058773f34a8865fba14b9fdd3c1c4cb3eaf44dbb7f6c01632ee830",
-    git_commit = "6612da89516247503f03ef76e974b51a434fb52e",
+    path = "/home/yitao/Documents/edge/edge-tensorflow",
 )
 
 load("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")

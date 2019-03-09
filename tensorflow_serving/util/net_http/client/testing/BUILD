@@ -12,4 +12,5 @@ cc_binary(
     deps = [
         "//tensorflow_serving/util/net_http/client:evhttp_client",
     ],
+    linkopts = ["-lm"],
 )

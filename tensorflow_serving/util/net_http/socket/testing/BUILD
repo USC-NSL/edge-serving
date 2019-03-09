@@ -13,6 +13,7 @@ cc_binary(
         "@com_github_libevent_libevent//:libevent",
         "@com_google_absl//absl/strings",
     ],
+    linkopts = ["-lm"],
 )
 
 cc_binary(
@@ -21,4 +22,5 @@ cc_binary(
     deps = [
         "@com_github_libevent_libevent//:libevent",
     ],
+    linkopts = ["-lm"],
 )
