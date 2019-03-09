@@ -4,5 +4,5 @@ bazel build -c opt --config=cuda --config=nativeopt --copt="-fPIC" tensorflow_se
 sudo cp bazel-bin/tensorflow_serving/model_servers/tensorflow_model_server /usr/local/bin/
 
 bazel build -c opt --config=cuda --config=nativeopt tensorflow_serving/tools/pip_package:build_pip_package
-bazel-bin/tensorflow_serving/tools/pip_package/build_pip_package /tmp/tensorflow_serving_package
+sudo bazel-bin/tensorflow_serving/tools/pip_package/build_pip_package /tmp/tensorflow_serving_package
 sudo pip install /tmp/tensorflow_serving_package/tensorflow_serving_api_gpu-1.13.0-py2.py3-none-any.whl

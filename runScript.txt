@@ -1,0 +1,10 @@
+- Mobilenet
+  - Basic
+  	tensorflow_model_server --port=9000 --model_config_file=tfserv.conf.mobilenet >out-001 2>&1
+  	python tensorflow_serving/example/mobilenet_client.py
+  - Client-Master-Worker
+  	tensorflow_model_server --port=9000 --model_config_file=tfserv.conf.mobilenet
+  	python tensorflow_serving/example/prototype_v1_master.py
+  	python tensorflow_serving/example/prototype_v1_worker.py --worker localhost:50101
+  	python tensorflow_serving/example/prototype_v1_worker.py --worker localhost:50102
+  	python tensorflow_serving/example/prototype_v1_client.py

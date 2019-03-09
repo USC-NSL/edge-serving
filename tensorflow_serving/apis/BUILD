@@ -184,6 +184,38 @@ py_library(
     ],
 )
 
+py_library(
+    name = "olympian_master_proto_py_pb2",
+    srcs = [
+        "olympian_master_pb2.py",
+        "olympian_master_pb2_grpc.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":classification_proto_py_pb2",
+        ":get_model_metadata_proto_py_pb2",
+        ":inference_proto_py_pb2",
+        ":predict_proto_py_pb2",
+        ":regression_proto_py_pb2",
+    ],
+)
+
+py_library(
+    name = "olympian_worker_proto_py_pb2",
+    srcs = [
+        "olympian_worker_pb2.py",
+        "olympian_worker_pb2_grpc.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":classification_proto_py_pb2",
+        ":get_model_metadata_proto_py_pb2",
+        ":inference_proto_py_pb2",
+        ":predict_proto_py_pb2",
+        ":regression_proto_py_pb2",
+    ],
+)
+
 tf_pyclif_proto_library(
     name = "predict_pyclif",
     proto_lib = ":predict_proto",
