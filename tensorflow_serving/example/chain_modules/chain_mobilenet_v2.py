@@ -15,6 +15,7 @@ class MobilenetPreprocess():
     self.current_model = current_model
     self.next_stub = next_stub
     self.request_input = tensor_util.MakeNdarray(request.inputs["client_input"])
+    self.frame_info = tensor_util.MakeNdarray(request.inputs["frame_info"])
     self.istub = istub
     self.cstub = cstub
 
@@ -22,6 +23,8 @@ class MobilenetPreprocess():
     print("[%s][Worker] Received request using chain %s w/ request_input.shape = %s" % (str(time.time()), self.chain_name, str(self.request_input.shape)))
     print("[%s][Worker] current_model = %s" % (time.time(), self.current_model))
     print("                        next_stub = %s" % (self.next_stub))
+    print("                        frame_info = %s" % (self.frame_info))
+
 
     self.internal_request = predict_pb2.PredictRequest()
     self.internal_request.model_spec.name = "exported_mobilenet_v1_1.0_224_preprocess"
@@ -46,6 +49,8 @@ class MobilenetPreprocess():
 
     next_request.inputs['normalized_image'].CopyFrom(
       tf.make_tensor_proto(internal_result_value, shape=[1, 224, 224, 3]))
+    next_request.inputs['frame_info'].CopyFrom(
+      tf.make_tensor_proto(str(self.frame_info)))
     next_request.inputs['route_table'].CopyFrom(
       tf.make_tensor_proto(str(self.route_table)))
 
@@ -63,6 +68,7 @@ class MobilenetInference():
     self.current_model = current_model
     self.next_stub = next_stub
     self.request_input = tensor_util.MakeNdarray(request.inputs["normalized_image"])
+    self.frame_info = tensor_util.MakeNdarray(request.inputs["frame_info"])
     self.istub = istub
     self.cstub = cstub
 
@@ -70,6 +76,7 @@ class MobilenetInference():
     print("[%s][Worker] Received request using chain %s w/ request_input.shape = %s" % (str(time.time()), self.chain_name, str(self.request_input.shape)))
     print("[%s][Worker] current_model = %s" % (time.time(), self.current_model))
     print("                        next_stub = %s" % (self.next_stub))
+    print("                        frame_info = %s" % (self.frame_info))
 
     self.internal_request = predict_pb2.PredictRequest()
     self.internal_request.model_spec.name = "exported_mobilenet_v1_1.0_224_inference"
@@ -93,6 +100,8 @@ class MobilenetInference():
 
     next_request.inputs['FINAL'].CopyFrom(
       tf.make_tensor_proto(internal_result_value, shape=[1, 5]))
+    next_request.inputs['frame_info'].CopyFrom(
+      tf.make_tensor_proto(str(self.frame_info)))
 
     next_result = self.cstub.Predict(next_request, 10.0)
         

@@ -36,6 +36,8 @@ class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
     if ("FINAL" in request.inputs):
       print("[%s][Client] Received final result w/ peer = %s" % (str(time.time()), context.peer()))
       final_result_value = tensor_util.MakeNdarray(request.inputs["FINAL"])
+      frame_info = tensor_util.MakeNdarray(request.inputs["frame_info"])
+      print(frame_info)
 
       # Mobilenet specific
       if (request.model_spec.name == "chain_mobilenet"):
@@ -43,7 +45,7 @@ class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
         results = np.squeeze(final_result_value)
         top_k = results.argsort()[-5:][::-1]
         for i in top_k:
-          print(labels[i], results[i])
+          print("    ", labels[i], results[i])
 
     else:
       print("[%s][Client] Something is wrong..." % (str(time.time())))
@@ -101,9 +103,9 @@ def main(_):
   # client sends input requests
   file_list = ["/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
                "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-               "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-               "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-               "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+               # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+               # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+               # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
                ]
 
   for frame_id in range(len(file_list)):
