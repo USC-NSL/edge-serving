@@ -51,8 +51,8 @@ tf.app.flags.DEFINE_string('worker', 'localhost:50100',
                            'Olympian worker host:port')
 FLAGS = tf.app.flags.FLAGS
 
-from chain_modules.chain_mobilenet import MobilenetPreprocess
-from chain_modules.chain_mobilenet import MobilenetInference
+from chain_modules.chain_mobilenet_v1 import MobilenetPreprocess
+from chain_modules.chain_mobilenet_v1 import MobilenetInference
 
 # Worker Class
 class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
@@ -99,7 +99,7 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
     self.istub = prediction_service_pb2_grpc.PredictionServiceStub(ichannel)
 
     # send heartbeat periodically
-    t = threading.Thread(target =  self.sendHeartBeat)
+    t = threading.Thread(target = self.sendHeartBeat)
     t.start()
 
   def getStubInfo(self, route_table, current_stub):
