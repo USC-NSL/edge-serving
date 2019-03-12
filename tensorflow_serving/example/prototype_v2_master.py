@@ -3,10 +3,10 @@ from __future__ import print_function
 
 import grpc
 import time
-import numpy as np
 from concurrent import futures
 
 import tensorflow as tf
+tf.logging.set_verbosity(tf.logging.ERROR)
 
 from tensorflow.python.framework import tensor_util
 
@@ -41,6 +41,10 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
       base_route_table = "exported_mobilenet_v1_1.0_224_preprocess:localhost:50101-exported_mobilenet_v1_1.0_224_inference:localhost:50102"
       route_table = "%s-FINAL:%s" % (base_route_table, client_address)
       return route_table
+    elif (chain_name == "chain_nlp"):
+      base_route_table = "saved_models:localhost:50101-nlpCPU:localhost:50102-speech2text:localhost:50102"
+      route_table = "%s-FINAL:%s" % (base_route_table, client_address)
+      return route_table
     else:
       return "Error, something is wrong..."
 
@@ -50,7 +54,7 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
       chain_name = str(request.model_spec.name)
       client_address = str(tensor_util.MakeNdarray(request.inputs["sess_setup"]))
 
-      print("[%s][Master] Received sess id request w/ client_address = %s, peer = %s\n" % (str(time.time()), client_address, context.peer()))
+      print("[%s][Master] Received sess id request for %s w/ client_address = %s, peer = %s\n" % (str(time.time()), chain_name, client_address, context.peer()))
       route_table = self.getRouteTable(chain_name, client_address)
 
       sess_id = "%s-%s" % (chain_name, client_address)

@@ -9,9 +9,10 @@ class MobilenetPreprocess():
   def Setup(self):
     return
 
-  def PreProcess(self, request, route_table, current_model, next_stub, istub, cstub):
+  def PreProcess(self, request, route_table, route_index, current_model, next_stub, istub, cstub):
     self.chain_name = request.model_spec.name
     self.route_table = route_table
+    self.route_index = route_index
     self.current_model = current_model
     self.next_stub = next_stub
     self.request_input = tensor_util.MakeNdarray(request.inputs["client_input"])
@@ -53,6 +54,8 @@ class MobilenetPreprocess():
       tf.make_tensor_proto(str(self.frame_info)))
     next_request.inputs['route_table'].CopyFrom(
       tf.make_tensor_proto(str(self.route_table)))
+    next_request.inputs['route_index'].CopyFrom(
+      tf.make_tensor_proto(self.route_index + 1, dtype=tf.int32))
 
     next_result = self.cstub.Predict(next_request, 10.0)
 
@@ -62,9 +65,10 @@ class MobilenetInference():
   def Setup(self):
     return
 
-  def PreProcess(self, request, route_table, current_model, next_stub, istub, cstub):
+  def PreProcess(self, request, route_table, route_index, current_model, next_stub, istub, cstub):
     self.chain_name = request.model_spec.name
     self.route_table = route_table
+    self.route_index = route_index
     self.current_model = current_model
     self.next_stub = next_stub
     self.request_input = tensor_util.MakeNdarray(request.inputs["normalized_image"])
@@ -102,6 +106,10 @@ class MobilenetInference():
       tf.make_tensor_proto(internal_result_value, shape=[1, 5]))
     next_request.inputs['frame_info'].CopyFrom(
       tf.make_tensor_proto(str(self.frame_info)))
+    next_request.inputs['route_table'].CopyFrom(
+      tf.make_tensor_proto(str(self.route_table)))
+    next_request.inputs['route_index'].CopyFrom(
+      tf.make_tensor_proto(self.route_index + 1, dtype=tf.int32))
 
     next_result = self.cstub.Predict(next_request, 10.0)
         

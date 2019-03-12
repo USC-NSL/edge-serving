@@ -7,6 +7,13 @@ import time
 from concurrent import futures
 
 import tensorflow as tf
+tf.logging.set_verbosity(tf.logging.ERROR)
+
+import sys
+sys.path.append('/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/')
+from modules.Tacotron import Tacotron
+from modules.audio_resample import Resample
+from modules.Deepspeech2 import Deepspeech2
 
 from tensorflow.python.framework import tensor_util
 
@@ -61,15 +68,24 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
         return current_model, next_stub
     return "Error", "Error"
 
+  def parseRouteTable(self, route_table, route_index):
+    tmp = route_table.split("-")
+    current_model = tmp[route_index].split(":")[0]
+    tt = tmp[route_index + 1].split(":")
+    next_stub = "%s:%s" % (tt[1], tt[2])
+    return current_model, next_stub
+
   def Predict(self, request, context):
     if (request.model_spec.signature_name == "chain_specification"): # gRPC from client
       route_table = str(tensor_util.MakeNdarray(request.inputs["route_table"]))
-      current_model, next_stub = self.parseRouteTable(route_table, FLAGS.worker)
+      route_index = int(tensor_util.MakeNdarray(request.inputs["route_index"]))
+      # current_model, next_stub = self.parseRouteTable(route_table, FLAGS.worker)
+      current_model, next_stub = self.parseRouteTable(route_table, route_index)
 
       if (current_model == "exported_mobilenet_v1_1.0_224_preprocess"):
         mobilenetpreprocess = MobilenetPreprocess()
         mobilenetpreprocess.Setup()
-        mobilenetpreprocess.PreProcess(request, route_table, current_model, next_stub, self.istub, self.cstubs[next_stub])
+        mobilenetpreprocess.PreProcess(request, route_table, route_index, current_model, next_stub, self.istub, self.cstubs[next_stub])
         mobilenetpreprocess.Apply()
         mobilenetpreprocess.PostProcess()
 
@@ -79,9 +95,36 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
 
         mobilenetinference = MobilenetInference()
         mobilenetinference.Setup()
-        mobilenetinference.PreProcess(request, route_table, current_model, next_stub, self.istub, fstub)
+        mobilenetinference.PreProcess(request, route_table, route_index, current_model, next_stub, self.istub, fstub)
         mobilenetinference.Apply()
         mobilenetinference.PostProcess()
+
+        fchannel.close()
+
+      elif (current_model == "saved_models"):
+        taco = Tacotron()
+        taco.Setup()
+        taco.PreProcess(request, route_table, route_index, current_model, next_stub, self.istub, self.cstubs[next_stub])
+        taco.Apply()
+        taco.PostProcess()
+
+      elif (current_model == "nlpCPU"):
+        resample = Resample()
+        resample.Setup()
+        resample.PreProcess(request, route_table, route_index, current_model, next_stub, self.istub, self.cstubs[next_stub])
+        resample.Apply()
+        resample.PostProcess()
+
+
+      elif (current_model == "speech2text"):
+        fchannel = grpc.insecure_channel(next_stub)
+        fstub = olympian_client_pb2_grpc.OlympianClientStub(fchannel)
+
+        deepspeech = Deepspeech2()
+        deepspeech.Setup()
+        deepspeech.PreProcess(request, route_table, route_index, current_model, next_stub, self.istub, fstub)
+        deepspeech.Apply()
+        deepspeech.PostProcess()
 
         fchannel.close()
 

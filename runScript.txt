@@ -15,7 +15,10 @@
   	python tensorflow_serving/example/prototype_v2_worker.py --worker localhost:50102
   	python tensorflow_serving/example/prototype_v2_client.py --client localhost:50201
 
-
+- NLP
+  - Basic
+    tensorflow_model_server --port=8500 --platform_config_file=/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/platform.conf --model_config_file=/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/models.conf
+    python pipeline.py
 
 
 python -m grpc.tools.protoc --python_out=. --grpc_python_out=. -I.:./tensorflow tensorflow_serving/apis/olympian_master.proto

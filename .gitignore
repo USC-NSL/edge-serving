@@ -17,3 +17,4 @@ node_modules
 tensorflow_serving/example/*.pyc
 /tensorflow
 tensorflow_serving/example/chain_modules/*.pyc
+*.npy

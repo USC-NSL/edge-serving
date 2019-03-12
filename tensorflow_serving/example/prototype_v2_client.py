@@ -7,6 +7,10 @@ import numpy as np
 from concurrent import futures
 
 import tensorflow as tf
+tf.logging.set_verbosity(tf.logging.ERROR)
+
+# import sys
+# sys.path.append('/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/')
 
 from tensorflow_serving.apis import predict_pb2
 from tensorflow_serving.apis import olympian_master_pb2_grpc
@@ -19,7 +23,7 @@ _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 MAX_MESSAGE_LENGTH = 1024 * 1024 * 64
 
 tf.app.flags.DEFINE_string('client', 'localhost:50201', 'Olympian client host:port')
-tf.app.flags.DEFINE_string('chain_name', 'mobilenet', 'name of the chain')
+tf.app.flags.DEFINE_string('chain_name', 'chain_mobilenet', 'name of the chain')
 FLAGS = tf.app.flags.FLAGS
 
 class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
@@ -46,6 +50,10 @@ class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
         top_k = results.argsort()[-5:][::-1]
         for i in top_k:
           print("    ", labels[i], results[i])
+      elif (request.model_spec.name == "chain_nlp"):
+        print(final_result_value)
+        # print(final_result_value.shape)
+        # np.save("data.npy", final_result_value)
 
     else:
       print("[%s][Client] Something is wrong..." % (str(time.time())))
@@ -84,15 +92,16 @@ def main(_):
   server.start()
 
   # client sends request for sess id and route table
+
   sess_setup_request = predict_pb2.PredictRequest()
-  sess_setup_request.model_spec.name = "chain_mobilenet"
+  sess_setup_request.model_spec.name = FLAGS.chain_name
   sess_setup_request.model_spec.signature_name = "chain_specification"
   sess_setup_request.inputs["sess_setup"].CopyFrom(
     tf.make_tensor_proto(FLAGS.client))
 
-  print("[%s][Client] Ready to send sess_setup_request!" % (str(time.time())))
+  print("[%s][Client] Ready to send sess_setup_request for %s!" % (str(time.time()), FLAGS.chain_name))
   sess_setup_result = cstubs[master_list[0]].Predict(sess_setup_request, 10.0)
-  
+    
   sess_id = str(tensor_util.MakeNdarray(sess_setup_result.outputs["sess_id"]))
   route_table = str(tensor_util.MakeNdarray(sess_setup_result.outputs["route_table"]))
 
@@ -101,19 +110,28 @@ def main(_):
   print("                                 first_stub = %s\n" % (first_stub))
 
   # client sends input requests
-  file_list = ["/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-               "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-               # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-               # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-               # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-               ]
+  if (FLAGS.chain_name == "chain_nlp"):
+    input_list = ["It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                ]
 
-  for frame_id in range(len(file_list)):
-    file_name = file_list[frame_id]
+  elif (FLAGS.chain_name == "chain_mobilenet"):
+    input_list = ["/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 ]
+
+  for frame_id in range(len(input_list)):
+    file_name = input_list[frame_id]
     frame_info = "%s-%s" % (sess_id, frame_id)
 
     request = predict_pb2.PredictRequest()
-    request.model_spec.name = "chain_mobilenet"
+    request.model_spec.name = FLAGS.chain_name
     request.model_spec.signature_name = "chain_specification"
     request.inputs["client_input"].CopyFrom(
       tf.make_tensor_proto(file_name))
@@ -121,6 +139,8 @@ def main(_):
       tf.make_tensor_proto(frame_info))
     request.inputs["route_table"].CopyFrom(
       tf.make_tensor_proto(route_table))
+    request.inputs["route_index"].CopyFrom(
+      tf.make_tensor_proto(0, dtype=tf.int32))
 
     print("[%s][Client] Ready to send client_input!" % (str(time.time())))
     result = cstubs[first_stub].Predict(request, 10.0)
