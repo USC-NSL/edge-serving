@@ -51,7 +51,8 @@ class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
         for i in top_k:
           print("    ", labels[i], results[i])
       elif (request.model_spec.name == "chain_nlp"):
-        print(final_result_value)
+        tt = str(final_result_value).decode('utf-8')
+        print(tt)
         # print(final_result_value.shape)
         # np.save("data.npy", final_result_value)
 
@@ -69,6 +70,17 @@ def getFirstStub(route_table):
 	return first_stub
 
 def main(_):
+  # start client's sstub
+  server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=[('grpc.max_send_message_length', MAX_MESSAGE_LENGTH), 
+                                                                    ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
+                                                                    ('grpc.max_message_length', MAX_MESSAGE_LENGTH)])
+  olympian_client_pb2_grpc.add_OlympianClientServicer_to_server(OlympianClient(), server)
+  server.add_insecure_port(FLAGS.client)
+  server.start()
+
+  print("[%s][Client] client's sstub started..." % (str(time.time())))
+
+  # setup client's cstubs
   cstubs = dict()
 
   worker_list = ["localhost:50101", "localhost:50102"]
@@ -83,16 +95,7 @@ def main(_):
   	stub = olympian_master_pb2_grpc.OlympianMasterStub(channel)
   	cstubs[m] = stub
 
-  # start client's sstub
-  server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=[('grpc.max_send_message_length', MAX_MESSAGE_LENGTH), 
-                                                                    ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
-                                                                    ('grpc.max_message_length', MAX_MESSAGE_LENGTH)])
-  olympian_client_pb2_grpc.add_OlympianClientServicer_to_server(OlympianClient(), server)
-  server.add_insecure_port(FLAGS.client)
-  server.start()
-
   # client sends request for sess id and route table
-
   sess_setup_request = predict_pb2.PredictRequest()
   sess_setup_request.model_spec.name = FLAGS.chain_name
   sess_setup_request.model_spec.signature_name = "chain_specification"
@@ -113,9 +116,9 @@ def main(_):
   if (FLAGS.chain_name == "chain_nlp"):
     input_list = ["It's well-known that Kobe Bryant is the best basketball player in the world.",
                   "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
                 ]
 
   elif (FLAGS.chain_name == "chain_mobilenet"):
@@ -143,7 +146,7 @@ def main(_):
       tf.make_tensor_proto(0, dtype=tf.int32))
 
     print("[%s][Client] Ready to send client_input!" % (str(time.time())))
-    result = cstubs[first_stub].Predict(request, 10.0)
+    result = cstubs[first_stub].Predict(request, 30.0)
     message = tensor_util.MakeNdarray(result.outputs["message"])
     print("[%s][Client] Received message %s\n" % (str(time.time()), message))
 

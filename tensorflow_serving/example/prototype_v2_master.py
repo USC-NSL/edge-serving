@@ -42,9 +42,12 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
       route_table = "%s-FINAL:%s" % (base_route_table, client_address)
       return route_table
     elif (chain_name == "chain_nlp"):
-      base_route_table = "saved_models:localhost:50101-nlpCPU:localhost:50102-speech2text:localhost:50102"
+      # base_route_table = "saved_models:localhost:50101-nlpCPU:localhost:50102-speech2text:localhost:50102"
       # base_route_table = "saved_models:localhost:50101-nlpCPU:localhost:50102-jasper:localhost:50102"
       # base_route_table = "saved_models:localhost:50101-nlpCPU:localhost:50102-wave2letter:localhost:50102"
+      # base_route_table = "saved_models:localhost:50101-nlpCPU:localhost:50101-speech2text:localhost:50101-encoder:localhost:50102-transformer:localhost:50102-decoder:localhost:50102"
+      # base_route_table = "saved_models:localhost:50101-nlpCPU:localhost:50101-jasper:localhost:50101-encoder:localhost:50102-transformer:localhost:50102-decoder:localhost:50102"
+      base_route_table = "saved_models:localhost:50101-nlpCPU:localhost:50101-wave2letter:localhost:50101-encoder:localhost:50102-transformer:localhost:50102-decoder:localhost:50102"
       route_table = "%s-FINAL:%s" % (base_route_table, client_address)
       return route_table
     else:
