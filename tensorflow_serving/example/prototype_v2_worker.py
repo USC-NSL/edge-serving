@@ -14,6 +14,8 @@ sys.path.append('/home/yitao/Documents/fun-project/tensorflow-related/miniature-
 from modules.Tacotron import Tacotron
 from modules.audio_resample import Resample
 from modules.Deepspeech2 import Deepspeech2
+from modules.Jasper import Jasper
+from modules.Wave2Letter import Wave2Letter
 
 from tensorflow.python.framework import tensor_util
 
@@ -120,11 +122,35 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
         fchannel = grpc.insecure_channel(next_stub)
         fstub = olympian_client_pb2_grpc.OlympianClientStub(fchannel)
 
-        deepspeech = Deepspeech2()
-        deepspeech.Setup()
-        deepspeech.PreProcess(request, route_table, route_index, current_model, next_stub, self.istub, fstub)
-        deepspeech.Apply()
-        deepspeech.PostProcess()
+        speech_recognition = Deepspeech2()
+        speech_recognition.Setup()
+        speech_recognition.PreProcess(request, route_table, route_index, current_model, next_stub, self.istub, fstub)
+        speech_recognition.Apply()
+        speech_recognition.PostProcess()
+
+        fchannel.close()
+
+      elif (current_model == "jasper"):
+        fchannel = grpc.insecure_channel(next_stub)
+        fstub = olympian_client_pb2_grpc.OlympianClientStub(fchannel)
+
+        speech_recognition = Jasper()
+        speech_recognition.Setup()
+        speech_recognition.PreProcess(request, route_table, route_index, current_model, next_stub, self.istub, fstub)
+        speech_recognition.Apply()
+        speech_recognition.PostProcess()
+
+        fchannel.close()
+
+      elif (current_model == "wave2letter"):
+        fchannel = grpc.insecure_channel(next_stub)
+        fstub = olympian_client_pb2_grpc.OlympianClientStub(fchannel)
+
+        speech_recognition = Wave2Letter()
+        speech_recognition.Setup()
+        speech_recognition.PreProcess(request, route_table, route_index, current_model, next_stub, self.istub, fstub)
+        speech_recognition.Apply()
+        speech_recognition.PostProcess()
 
         fchannel.close()
 

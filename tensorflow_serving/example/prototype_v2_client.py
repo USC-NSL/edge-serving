@@ -113,9 +113,9 @@ def main(_):
   if (FLAGS.chain_name == "chain_nlp"):
     input_list = ["It's well-known that Kobe Bryant is the best basketball player in the world.",
                   "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
                 ]
 
   elif (FLAGS.chain_name == "chain_mobilenet"):
