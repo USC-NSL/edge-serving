@@ -147,6 +147,9 @@ Status TensorflowPredictor::PredictWithModelSpec(const RunOptions& run_options,
   if (use_saved_model_) {
     ServableHandle<SavedModelBundle> bundle;
     TF_RETURN_IF_ERROR(core->GetServableHandle(model_spec, &bundle));
+
+    // LOG(INFO) << "[Yitao] Ready to call RunPredict()!!!";
+
     return RunPredict(run_options, bundle->meta_graph_def, bundle.id().version,
                       bundle->session.get(), request, response);
   }

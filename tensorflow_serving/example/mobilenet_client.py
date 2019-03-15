@@ -32,7 +32,7 @@ from tensorflow_serving.apis import prediction_service_pb2_grpc
 
 from tensorflow.python.framework import tensor_util
 
-tf.app.flags.DEFINE_string('server', 'localhost:9000',
+tf.app.flags.DEFINE_string('server', 'localhost:8500',
                            'PredictionService host:port')
 tf.app.flags.DEFINE_string('image', '', 'path to image in JPEG format')
 FLAGS = tf.app.flags.FLAGS
@@ -80,9 +80,9 @@ def main(_):
   request_inference.model_spec.name = 'exported_mobilenet_v1_1.0_224_inference'
   request_inference.model_spec.signature_name = 'predict_images'
 
-  batch_size = 1
+  batch_size = 800
   
-  iteration_list = [1]
+  iteration_list = [10]
   for iteration in iteration_list:
     start = time.time()
     for i in range(iteration):
@@ -97,13 +97,14 @@ def main(_):
       result_inference_value = tensor_util.MakeNdarray(result_inference.outputs['scores'])
       # print(result_inference_value.shape)
       
-      results = np.squeeze(result_inference_value)
-      top_k = results.argsort()[-5:][::-1]
-      for i in top_k:
-        print(labels[i], results[i])
+      # results = np.squeeze(result_inference_value)
+      # top_k = results.argsort()[-5:][::-1]
+      # for i in top_k:
+      #   print(labels[i], results[i])
 
     end = time.time()
     print("It takes %s sec to run %d mobilenet jobs with batch size of %d" % (str(end - start), iteration, batch_size))
+
 
 if __name__ == '__main__':
   tf.app.run()

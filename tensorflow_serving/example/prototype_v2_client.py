@@ -115,10 +115,10 @@ def main(_):
   # client sends input requests
   if (FLAGS.chain_name == "chain_nlp"):
     input_list = ["It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
                 ]
 
   elif (FLAGS.chain_name == "chain_mobilenet"):
@@ -149,6 +149,8 @@ def main(_):
     result = cstubs[first_stub].Predict(request, 30.0)
     message = tensor_util.MakeNdarray(result.outputs["message"])
     print("[%s][Client] Received message %s\n" % (str(time.time()), message))
+
+  print("[%s][Client] All finished. Please use Ctrl+C to terminate client script." % str(time.time()))
 
   try:
     while True:
