@@ -27,6 +27,14 @@ route_table = ""
 
 class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
 
+  def load_labels(self):
+    label_file = ("/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/retrained_labels.txt")
+    label = []
+    proto_as_ascii_lines = tf.gfile.GFile(label_file).readlines()
+    for l in proto_as_ascii_lines:
+      label.append(l.rstrip())
+    return label
+
   def Predict(self, request, context):
     if ("update_route_table" in request.inputs):
       print("[%s][Client] Received retrospect message from Master" % (str(time.time())))
@@ -35,6 +43,21 @@ class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
       route_table = tensor_util.MakeNdarray(request.inputs["update_route_table"])
       print("[%s][Client] Changed route table from %s to %s" % (str(time.time()), previous_route_table, route_table))
 
+    elif ("FINAL" in request.inputs):
+      final_result_value = tensor_util.MakeNdarray(request.inputs["FINAL"])
+      frame_info = tensor_util.MakeNdarray(request.inputs["frame_info"])
+      print("[%s][Client] Received final result w/ frame_info = %s" % (str(time.time()), frame_info))
+
+      # Mobilenet specific
+      if (request.model_spec.name == "chain_mobilenet"):
+        labels = self.load_labels()
+        results = np.squeeze(final_result_value)
+        top_k = results.argsort()[-5:][::-1]
+        for i in top_k:
+          print("    ", labels[i], results[i])
+      else:
+        print("Not implemented yet...")
+
     else:
       print("[%s][Client] Something is wrong..." % (str(time.time())))
 
@@ -42,7 +65,6 @@ class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
     dumbresult = predict_pb2.PredictResponse()
     dumbresult.outputs["message"].CopyFrom(tf.make_tensor_proto("OK"))
     return dumbresult
-
 
 def getFirstStub(route_table):
   tmp = route_table.split("-")[0].split(":")
@@ -65,12 +87,12 @@ def main(_):
   # setup client's cstubs
   cstubs = dict()
 
-  # # worker_list = ["localhost:50101", "localhost:50102"]
-  # worker_list = ["localhost:50101"]
-  # for w in worker_list:
-  #   channel = grpc.insecure_channel(w)
-  #   stub = olympian_worker_pb2_grpc.OlympianWorkerStub(channel)
-  #   cstubs[w] = stub
+  # worker_list = ["localhost:50101", "localhost:50102"]
+  worker_list = ["localhost:50101"]
+  for w in worker_list:
+    channel = grpc.insecure_channel(w)
+    stub = olympian_worker_pb2_grpc.OlympianWorkerStub(channel)
+    cstubs[w] = stub
 
   master_list = ["localhost:50051"]
   for m in master_list:
@@ -97,7 +119,43 @@ def main(_):
   print("[%s][Client] Received sess_id = %s" % (str(time.time()), sess_id))
   print("                                 first_stub = %s\n" % (first_stub))
 
+  # client sends input requests
+  if (FLAGS.chain_name == "chain_nlp"):
+    input_list = ["It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                ]
+  elif (FLAGS.chain_name == "chain_mobilenet"):
+    input_list = ["/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 ]
 
+  for frame_id, client_input in enumerate(input_list):
+    frame_info = "%s-%s" % (sess_id, frame_id)
+
+    request = predict_pb2.PredictRequest()
+    request.model_spec.name = FLAGS.chain_name
+    request.model_spec.signature_name = "chain_specification"
+    request.inputs["client_input"].CopyFrom(
+      tf.make_tensor_proto(client_input))
+    request.inputs["frame_info"].CopyFrom(
+      tf.make_tensor_proto(frame_info))
+    request.inputs["route_table"].CopyFrom(
+      tf.make_tensor_proto(route_table))
+    request.inputs["route_index"].CopyFrom(
+      tf.make_tensor_proto(0, dtype=tf.int32))
+
+    print("[%s][Client] Ready to send client's %dth input!" % (str(time.time()), frame_id))
+    result = cstubs[first_stub].Predict(request, 30.0)
+    message = tensor_util.MakeNdarray(result.outputs["message"])
+    print("[%s][Client] Received message %s\n" % (str(time.time()), message))
+
+  print("[%s][Client] All finished. Please use Ctrl+C to terminate client script." % str(time.time()))
 
   try:
     while True:

@@ -61,17 +61,17 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
     ichannel = grpc.insecure_channel("localhost:8500")
     self.istub = prediction_service_pb2_grpc.PredictionServiceStub(ichannel)
 
-  def parseRouteTable(self, route_table, worker_address):
-    tmp = route_table.split("-")
-    for i in range(len(tmp)):
-      t = tmp[i].split(":")
-      tstub = "%s:%s" % (t[1], t[2])
-      if (tstub == worker_address):
-        current_model = t[0]
-        tt = tmp[i + 1].split(":")
-        next_stub = "%s:%s" % (tt[1], tt[2])
-        return current_model, next_stub
-    return "Error", "Error"
+  # def parseRouteTable(self, route_table, worker_address):
+  #   tmp = route_table.split("-")
+  #   for i in range(len(tmp)):
+  #     t = tmp[i].split(":")
+  #     tstub = "%s:%s" % (t[1], t[2])
+  #     if (tstub == worker_address):
+  #       current_model = t[0]
+  #       tt = tmp[i + 1].split(":")
+  #       next_stub = "%s:%s" % (tt[1], tt[2])
+  #       return current_model, next_stub
+  #   return "Error", "Error"
 
   def parseRouteTable(self, route_table, route_index):
     tmp = route_table.split("-")
