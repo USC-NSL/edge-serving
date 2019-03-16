@@ -88,21 +88,42 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
       print("                        frame_info = %s" % (frame_info))
 
       if (current_model == "exported_mobilenet_v1_1.0_224_preprocess"):
-        mobilenetpreprocess = MobilenetPreprocess()
-        mobilenetpreprocess.Setup()
-        mobilenetpreprocess.PreProcess(request, self.istub)
-        mobilenetpreprocess.Apply()
-        next_request = mobilenetpreprocess.PostProcess()
+        module_instance = MobilenetPreprocess()
 
       elif (current_model == "exported_mobilenet_v1_1.0_224_inference"):
-        mobilenetinference = MobilenetInference()
-        mobilenetinference.Setup()
-        mobilenetinference.PreProcess(request, self.istub)
-        mobilenetinference.Apply()
-        next_request = mobilenetinference.PostProcess()
+        module_instance = MobilenetInference()
+
+      elif (current_model == "taco"):
+        module_instance = Tacotron()
+
+      elif (current_model == "nlpCPU"):
+        module_instance = Resample()
+
+      elif (current_model == "speech2text"):
+        module_instance = Deepspeech2()
+
+      elif (current_model == "jasper"):
+        module_instance = Jasper()
+
+      elif (current_model == "wave2letter"):
+        module_instance = Wave2Letter()
+
+      elif (current_model == "encoder"):
+        module_instance = TextEncoder()
+
+      elif (current_model == "transformer"):
+        module_instance = Transformer()
+
+      elif (current_model == "decoder"):
+        module_instance = TextDecoder()
 
       else:
         print("[Worker] Error...")
+
+      module_instance.Setup()
+      module_instance.PreProcess(request, self.istub)
+      module_instance.Apply()
+      next_request = module_instance.PostProcess()
 
       print("[%s][Worker] Received result from local TF-Serving, ready for next stub %s\n" % (str(time.time()), next_stub))
       next_request.model_spec.name = chain_name
@@ -118,10 +139,10 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
       if (next_stub == client_address):
         fchannel = grpc.insecure_channel(next_stub)
         fstub = olympian_client_pb2_grpc.OlympianClientStub(fchannel)
-        next_result = fstub.Predict(next_request, 10.0)
+        next_result = fstub.Predict(next_request, 30.0)
         fchannel.close()
       else:
-        next_result = self.cstubs[next_stub].Predict(next_request, 10.0)
+        next_result = self.cstubs[next_stub].Predict(next_request, 30.0)
 
     else: # Not sure yet...
       print("[Worker] Not sure yet...")

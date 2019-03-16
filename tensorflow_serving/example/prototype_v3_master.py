@@ -129,6 +129,12 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
       base_route_table = self.getRouteTable_helper(default_chain_instance, default_chain_profile, resource_map)
       route_table = "%sFINAL:%s" % (base_route_table, client_address)
       return route_table
+    elif (chain_name == "chain_nlp"):
+      default_chain_instance = ["taco", "nlpCPU", "speech2text", "encoder", "transformer", "decoder"]
+      default_chain_profile = [1000, 1000, 1000, 1000, 1000, 1000, 1000]
+      base_route_table = self.getRouteTable_helper(default_chain_instance, default_chain_profile, resource_map)
+      route_table = "%sFINAL:%s" % (base_route_table, client_address)
+      return route_table
     else:
       return "Error, something is wrong..."
 

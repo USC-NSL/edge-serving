@@ -55,6 +55,10 @@ class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
         top_k = results.argsort()[-5:][::-1]
         for i in top_k:
           print("    ", labels[i], results[i])
+      elif (request.model_spec.name == "chain_nlp"):
+        tt = str(final_result_value).decode('utf-8')
+        print(tt)
+
       else:
         print("Not implemented yet...")
 

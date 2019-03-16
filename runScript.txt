@@ -32,9 +32,15 @@
     cd Documents/software/prometheus-2.8.0.linux-amd64
     ./prometheus --config.file=prometheus.yml
     tensorflow_model_server --port=8500 --platform_config_file=/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/platform.conf --model_config_file=/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/models.conf --monitoring_config_file=/home/yitao/Documents/edge/edge-serving/tensorflow_serving/servables/tensorflow/testdata/monitoring_config.txt --rest_api_port=55101
+    python tensorflow_serving/example/prototype_v3_master.py
+    python tensorflow_serving/example/prototype_v3_worker.py --worker localhost:50101
+    python tensorflow_serving/example/prototype_v3_client.py --client localhost:50999 --chain_name chain_nlp
     
   - Mobilenet
     tensorflow_model_server --port=8500 --model_config_file=tfserv.conf.mobilenet --monitoring_config_file=/home/yitao/Documents/edge/edge-serving/tensorflow_serving/servables/tensorflow/testdata/monitoring_config.txt --rest_api_port=55101
+    python tensorflow_serving/example/prototype_v3_master.py
+    python tensorflow_serving/example/prototype_v3_worker.py --worker localhost:50101
+    python tensorflow_serving/example/prototype_v3_client.py --client localhost:50999 --chain_name chain_mobilenet
     
 
 
