@@ -18,6 +18,8 @@ from modules.Jasper import Jasper
 from modules.Wave2Letter import Wave2Letter
 from modules.text_encoder import TextEncoder
 from modules.Transformer import Transformer
+from modules.TransformerBig import TransformerBig
+from modules.Convs2s import Convs2s
 from modules.text_decoder import TextDecoder
 
 from tensorflow.python.framework import tensor_util
@@ -93,7 +95,7 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
       elif (current_model == "exported_mobilenet_v1_1.0_224_inference"):
         module_instance = MobilenetInference()
 
-      elif (current_model == "taco"):
+      elif (current_model == "tacotron"):
         module_instance = Tacotron()
 
       elif (current_model == "nlpCPU"):
@@ -113,6 +115,12 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
 
       elif (current_model == "transformer"):
         module_instance = Transformer()
+
+      elif (current_model == "transformer_big"):
+        module_instance = TransformerBig()
+
+      elif (current_model == "conv_s2s"):
+        module_instance = Convs2s()
 
       elif (current_model == "decoder"):
         module_instance = TextDecoder()
