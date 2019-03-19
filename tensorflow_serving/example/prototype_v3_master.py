@@ -24,6 +24,12 @@ logging.basicConfig()
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 MAX_MESSAGE_LENGTH = 1024 * 1024 * 64
 
+# # Worker's loaded model set class
+# class WorkerLoadedModelSet():
+#   def __init__(self, w_address):
+#     self.w_address = w_address
+#     self.loaded_model_set = set()
+
 # Master Class
 class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
 
@@ -57,10 +63,10 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
 
     # # self.worker_list = ["localhost:50101", "localhost:50102"]
     self.worker_list = ["localhost:50101"]
-    # for w in worker_list:
-    #   channel = grpc.insecure_channel(w)
-    #   stub = olympian_worker_pb2_grpc.OlympianWorkerStub(channel)
-    #   cstubs[w] = stub
+    for w in self.worker_list:
+      channel = grpc.insecure_channel(w)
+      stub = olympian_worker_pb2_grpc.OlympianWorkerStub(channel)
+      self.cstubs[w] = stub
 
     self.master_list = ["localhost:50051"]
     for m in self.master_list:
@@ -69,6 +75,11 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
       self.cstubs[m] = stub
 
     self.registered_session = []
+
+    self.registered_worker = dict()
+    for w in self.worker_list:
+      # self.registered_worker[w] = WorkerLoadedModelSet(w)
+      self.registered_worker[w] = set()
 
     # t = threading.Thread(target = self.retrospect)
     # t.start()
@@ -105,7 +116,7 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
         return base_route_table
       else:
         # Not implemented yet...
-        return "Note implemented yet..."
+        return "Not implemented yet..."
 
   def getRouteTable(self, chain_name, client_address, sess_requirement):
     prometheus_list = []
@@ -130,9 +141,9 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
       route_table = "%sFINAL:%s" % (base_route_table, client_address)
       return route_table
     elif (chain_name == "chain_nlp"):
-      default_chain_instance = ["tacotron", "nlpCPU", "speech2text", "encoder", "transformer", "decoder"]
-      # default_chain_instance = ["tacotron", "nlpCPU", "speech2text", "encoder", "transformer_big", "decoder"]
-      # default_chain_instance = ["tacotron", "nlpCPU", "speech2text", "encoder", "conv_s2s", "decoder"]
+      default_chain_instance = ["tacotron", "nlpCPU", "deepspeech2", "encoder", "transformer", "decoder"]
+      # default_chain_instance = ["tacotron", "nlpCPU", "deepspeech2", "encoder", "transformer_big", "decoder"]
+      # default_chain_instance = ["tacotron", "nlpCPU", "deepspeech2", "encoder", "conv_s2s", "decoder"]
       # default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "transformer", "decoder"]
       # default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "transformer_big", "decoder"]
       # default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "conv_s2s", "decoder"]
@@ -146,6 +157,42 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
     else:
       return "Error, something is wrong..."
 
+  def add_worker_loaded_model(self, route_table):
+    myWorkerModelMap = dict()
+    for tmp in route_table.split('-'):
+      tt = tmp.split(':')
+      module_intance = tt[0]
+      w_address = "%s:%s" % (tt[1], tt[2])
+      if (module_intance in ["FINAL", "nlpCPU", "encoder", "decoder"]):
+        continue
+      else:
+        if (module_intance in self.registered_worker[w_address]):
+          continue
+        else:
+          self.registered_worker[w_address].add(module_intance)
+          if (w_address not in myWorkerModelMap):
+            myWorkerModelMap[w_address] = ""
+          myWorkerModelMap[w_address] += "%s-" % module_intance
+
+    for w_address, model_update_list_tmp in myWorkerModelMap.iteritems():
+      model_update_list = model_update_list_tmp[:-1]
+      print("[%s][Master] Notifying %s to add %s" % (str(time.time()), w_address, model_update_list))
+
+      model_update_request = predict_pb2.PredictRequest()
+      model_update_request.model_spec.name = "unknown"
+      model_update_request.model_spec.signature_name = "unknown"
+      model_update_request.inputs["model_update_add"].CopyFrom(
+        tf.make_tensor_proto(model_update_list))
+
+      model_update_result = self.cstubs[w_address].Predict(model_update_request, 10.0)
+
+  def printWorkerModelInfo(self):
+    print("[%s][Master] workers' model info is:" % str(time.time()))
+    for w_address, loaded_model_set in self.registered_worker.iteritems():
+      print("%s-%s" % (w_address, str(loaded_model_set)))
+
+    print(' ')
+
   def Predict(self, request, context):
     print("========== Predict() ==========")
     if ("sess_setup" in request.inputs): # gRPC of sess id request from client
@@ -155,7 +202,11 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
 
       print("[%s][Master] Received sess id request for %s w/ client_address = %s, requirement = %s" % (str(time.time()), chain_name, client_address, sess_requirement))
       route_table = self.getRouteTable(chain_name, client_address, sess_requirement)
-      print("[%s][Master] Generated default route table: %s\n" % (str(time.time()), route_table))
+      print("[%s][Master] Generated default route table: %s" % (str(time.time()), route_table))
+
+      self.add_worker_loaded_model(route_table)
+      print("[%s][Master] Worker has loaded the required models" % str(time.time()))
+      self.printWorkerModelInfo()
 
       sess_id = "%s-%s" % (chain_name, client_address)
       self.registered_session.append(sess_id)

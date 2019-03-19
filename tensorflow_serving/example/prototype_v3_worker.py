@@ -30,6 +30,11 @@ from tensorflow_serving.apis import olympian_master_pb2_grpc
 from tensorflow_serving.apis import olympian_worker_pb2_grpc
 from tensorflow_serving.apis import olympian_client_pb2_grpc
 
+from tensorflow_serving.apis import model_management_pb2
+from tensorflow_serving.apis import model_service_pb2_grpc
+from tensorflow_serving.config import model_server_config_pb2
+from google.protobuf import text_format
+
 import logging
 logging.basicConfig()
 
@@ -63,6 +68,21 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
 
     ichannel = grpc.insecure_channel("localhost:8500")
     self.istub = prediction_service_pb2_grpc.PredictionServiceStub(ichannel)
+    self.istub_reload = model_service_pb2_grpc.ModelServiceStub(ichannel)
+
+    self.loaded_model_set = set()
+
+    self.model_path_dict = dict()
+    self.model_path_dict['tacotron'] = '/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/tacotron'
+    self.model_path_dict['deepspeech2'] = '/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/deepspeech2'
+    self.model_path_dict['transformer'] = '/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/transformer'
+    self.model_path_dict['jasper'] = '/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/jasper'
+    self.model_path_dict['wave2letter'] = '/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/wave2letter'
+    self.model_path_dict['conv_s2s'] = '/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/conv_s2s'
+    self.model_path_dict['transformer_big'] = '/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/transformer_big'
+    self.model_path_dict['exported_mobilenet_v1_1.0_224_preprocess'] = '/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/exported_mobilenet_v1_1.0_224_preprocess'
+    self.model_path_dict['exported_mobilenet_v1_1.0_224_inference'] = '/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/exported_mobilenet_v1_1.0_224_inference'
+
 
   def parseRouteTable(self, route_table, route_index):
     tmp = route_table.split("-")
@@ -71,6 +91,27 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
     next_model = tt[0]
     next_stub = "%s:%s" % (tt[1], tt[2])
     return current_model, next_model, next_stub
+
+  def addLoadedModelSet(self, model_update_add_list):
+    print("[%s][Worker] old loaded_model_set = %s" % (str(time.time()), str(self.loaded_model_set)))
+    for module_instance in model_update_add_list.split('-'):
+      self.loaded_model_set.add(module_instance)
+    print("[%s][Worker] new loaded_model_set = %s" % (str(time.time()), str(self.loaded_model_set)))
+
+  def delLoadedModelSet(self, model_update_del_list):
+    print("[%s][Worker] old loaded_model_set = %s" % (str(time.time()), str(self.loaded_model_set)))
+    for module_instance in model_update_del_list:
+      self.loaded_model_set.remove(module_instance)
+    print("[%s][Worker] new loaded_model_set = %s" % (str(time.time()), str(self.loaded_model_set)))
+
+  def getModelConfigStr(self):
+    pre = 'model_config_list: {'
+    post = '}'
+    mid = ''
+    for module_instance in self.loaded_model_set:
+      mid += 'config: {name: "%s", base_path: "%s", model_platform: "tensorflow"}, ' % (module_instance, self.model_path_dict[module_instance])
+
+    return pre + mid + post
 
   def Predict(self, request, context):
     if (request.model_spec.signature_name == "chain_specification"): # gRPC from client
@@ -101,7 +142,7 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
       elif (current_model == "nlpCPU"):
         module_instance = Resample()
 
-      elif (current_model == "speech2text"):
+      elif (current_model == "deepspeech2"):
         module_instance = Deepspeech2()
 
       elif (current_model == "jasper"):
@@ -151,6 +192,26 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
         fchannel.close()
       else:
         next_result = self.cstubs[next_stub].Predict(next_request, 30.0)
+
+    elif ("model_update_add" in request.inputs):
+      print("========== Update(add) ==========")
+      model_update_add_list = str(tensor_util.MakeNdarray(request.inputs["model_update_add"]))
+      print("[%s][Worker] Received model_update_add_list = %s" % (str(time.time()), model_update_add_list))
+
+      self.addLoadedModelSet(model_update_add_list)
+      config_ini = self.getModelConfigStr()
+      model_server_config = model_server_config_pb2.ModelServerConfig()
+      model_server_config = text_format.Parse(text=config_ini, message=model_server_config)
+
+      internal_request = model_management_pb2.ReloadConfigRequest()
+      internal_request.config.CopyFrom(model_server_config)
+
+      internal_response = self.istub_reload.HandleReloadConfigRequest(internal_request, 10.0)
+
+      print("[%s][Worker] Updated model list\n" % str(time.time()))
+
+    elif ("model_update_del" in request.inputs):
+      pass
 
     else: # Not sure yet...
       print("[Worker] Not sure yet...")
