@@ -126,15 +126,15 @@ def main(_):
   # client sends input requests
   if (FLAGS.chain_name == "chain_nlp"):
     input_list = ["It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
                   # "It's well-known that Kobe Bryant is the best basketball player in the world.",
                   # "It's well-known that Kobe Bryant is the best basketball player in the world.",
                 ]
   elif (FLAGS.chain_name == "chain_mobilenet"):
     input_list = ["/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-                 # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-                 # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
+                 "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
                  # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
                  # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
                  ]
@@ -155,11 +155,17 @@ def main(_):
       tf.make_tensor_proto(0, dtype=tf.int32))
 
     print("[%s][Client] Ready to send client's %dth input!" % (str(time.time()), frame_id))
-    result = cstubs[first_stub].Predict(request, 30.0)
-    message = tensor_util.MakeNdarray(result.outputs["message"])
-    print("[%s][Client] Received message %s\n" % (str(time.time()), message))
 
-  print("[%s][Client] All finished. Please use Ctrl+C to terminate client script." % str(time.time()))
+    # # sync way
+    # result = cstubs[first_stub].Predict(request, 30.0)
+    # message = tensor_util.MakeNdarray(result.outputs["message"])
+    # print("[%s][Client] Received message %s\n" % (str(time.time()), message))
+
+    # async way
+    result_future = cstubs[first_stub].Predict.future(request, 30.0)
+    time.sleep(1) # mimic input fps of 1
+
+  # print("[%s][Client] All finished. Please use Ctrl+C to terminate client script." % str(time.time()))
 
   try:
     while True:
