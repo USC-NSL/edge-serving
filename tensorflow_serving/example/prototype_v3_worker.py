@@ -43,6 +43,7 @@ from chain_modules.chain_mobilenet_v3 import MobilenetInference
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 MAX_MESSAGE_LENGTH = 1024 * 1024 * 64
+MAX_WORKERS = 60
 
 tf.app.flags.DEFINE_string('worker', 'localhost:50101', 'Olympian worker host:port')
 FLAGS = tf.app.flags.FLAGS
@@ -83,6 +84,32 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
     self.model_path_dict['exported_mobilenet_v1_1.0_224_preprocess'] = '/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/exported_mobilenet_v1_1.0_224_preprocess'
     self.model_path_dict['exported_mobilenet_v1_1.0_224_inference'] = '/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/exported_mobilenet_v1_1.0_224_inference'
 
+  def callSetup(self, model_update_add_list):
+    for module_instance in model_update_add_list.split('-'):
+      if (module_instance == "exported_mobilenet_v1_1.0_224_preprocess"):
+        MobilenetPreprocess.Setup()
+      elif (module_instance == "exported_mobilenet_v1_1.0_224_inference"):
+        MobilenetInference.Setup()
+      elif (module_instance == "tacotron"):
+        Tacotron.Setup()
+      elif (module_instance == "nlpCPU"):
+        Resample.Setup()
+      elif (module_instance == "deepspeech2"):
+        Deepspeech2.Setup()
+      elif (module_instance == "jasper"):
+        Jasper.Setup()
+      elif (module_instance == "wave2letter"):
+        Wave2Letter.Setup()
+      elif (module_instance == "encoder"):
+        TextEncoder.Setup()
+      elif (module_instance == "transformer"):
+        Transformer.Setup()
+      elif (module_instance == "transformer_big"):
+        TransformerBig.Setup()
+      elif (module_instance == "conv_s2s"):
+        Convs2s.Setup()
+      elif (module_instance == "decoder"):
+        TextDecoder.Setup()
 
   def parseRouteTable(self, route_table, route_index):
     tmp = route_table.split("-")
@@ -109,7 +136,10 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
     post = '}'
     mid = ''
     for module_instance in self.loaded_model_set:
-      mid += 'config: {name: "%s", base_path: "%s", model_platform: "tensorflow"}, ' % (module_instance, self.model_path_dict[module_instance])
+      if (module_instance in ["nlpCPU", "encoder", "decoder"]): # cpu module -> no need to load in TF-Serving
+        continue
+      else:
+        mid += 'config: {name: "%s", base_path: "%s", model_platform: "tensorflow"}, ' % (module_instance, self.model_path_dict[module_instance])
 
     return pre + mid + post
 
@@ -169,12 +199,12 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
       else:
         print("[Worker] Error...")
 
-      module_instance.Setup()
+      # module_instance.Setup()
       module_instance.PreProcess(request, self.istub)
       module_instance.Apply()
       next_request = module_instance.PostProcess()
 
-      print("[%s][Worker] Received result from local TF-Serving, ready for next stub %s\n" % (str(time.time()), next_stub))
+      print("[%s][Worker] Received %s result for %s from local TF-Serving, ready for next stub %s\n" % (str(time.time()), current_model, str(frame_info), next_stub))
       next_request.model_spec.name = chain_name
       next_request.model_spec.signature_name = "chain_specification"
 
@@ -199,6 +229,7 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
       print("[%s][Worker] Received model_update_add_list = %s" % (str(time.time()), model_update_add_list))
 
       self.addLoadedModelSet(model_update_add_list)
+      self.callSetup(model_update_add_list)
       config_ini = self.getModelConfigStr()
       model_server_config = model_server_config_pb2.ModelServerConfig()
       model_server_config = text_format.Parse(text=config_ini, message=model_server_config)
@@ -221,7 +252,7 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
     return dumbresult    
 
 def main(_):
-  server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=[('grpc.max_send_message_length', MAX_MESSAGE_LENGTH), 
+  server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_WORKERS), options=[('grpc.max_send_message_length', MAX_MESSAGE_LENGTH), 
                                                                     ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
                                                                     ('grpc.max_message_length', MAX_MESSAGE_LENGTH)])
   olympian_worker_pb2_grpc.add_OlympianWorkerServicer_to_server(OlympianWorker(), server)

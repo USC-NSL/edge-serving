@@ -23,6 +23,7 @@ logging.basicConfig()
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 MAX_MESSAGE_LENGTH = 1024 * 1024 * 64
+MAX_WORKERS = 60
 
 # # Worker's loaded model set class
 # class WorkerLoadedModelSet():
@@ -163,7 +164,8 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
       tt = tmp.split(':')
       module_intance = tt[0]
       w_address = "%s:%s" % (tt[1], tt[2])
-      if (module_intance in ["FINAL", "nlpCPU", "encoder", "decoder"]):
+      # if (module_intance in ["FINAL", "nlpCPU", "encoder", "decoder"]):
+      if (module_intance in ["FINAL"]):
         continue
       else:
         if (module_intance in self.registered_worker[w_address]):
@@ -228,7 +230,7 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
 
 def main(_):
   
-  server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=[('grpc.max_send_message_length', MAX_MESSAGE_LENGTH), 
+  server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_WORKERS), options=[('grpc.max_send_message_length', MAX_MESSAGE_LENGTH), 
                                                                     ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
                                                                     ('grpc.max_message_length', MAX_MESSAGE_LENGTH)])
   olympian_master_pb2_grpc.add_OlympianMasterServicer_to_server(OlympianMaster(), server)

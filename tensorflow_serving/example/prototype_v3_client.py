@@ -18,6 +18,7 @@ from tensorflow.python.framework import tensor_util
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 MAX_MESSAGE_LENGTH = 1024 * 1024 * 64
+MAX_WORKERS = 60
 
 tf.app.flags.DEFINE_string('client', 'localhost:50201', 'Olympian client host:port')
 tf.app.flags.DEFINE_string('chain_name', 'chain_mobilenet', 'name of the chain')
@@ -79,7 +80,7 @@ def main(_):
   global route_table
 
   # start client's sstub
-  server = grpc.server(futures.ThreadPoolExecutor(max_workers=10), options=[('grpc.max_send_message_length', MAX_MESSAGE_LENGTH), 
+  server = grpc.server(futures.ThreadPoolExecutor(max_workers=MAX_WORKERS), options=[('grpc.max_send_message_length', MAX_MESSAGE_LENGTH), 
                                                                     ('grpc.max_receive_message_length', MAX_MESSAGE_LENGTH),
                                                                     ('grpc.max_message_length', MAX_MESSAGE_LENGTH)])
   olympian_client_pb2_grpc.add_OlympianClientServicer_to_server(OlympianClient(), server)

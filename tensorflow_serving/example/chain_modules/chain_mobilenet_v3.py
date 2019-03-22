@@ -6,8 +6,10 @@ from tensorflow.python.framework import tensor_util
 from tensorflow_serving.apis import predict_pb2
 
 class MobilenetPreprocess():
-  def Setup(self):
-    return
+
+  @staticmethod
+  def Setup():
+    pass
 
   def PreProcess(self, request, istub):
     request_input = tensor_util.MakeNdarray(request.inputs["client_input"])
@@ -35,8 +37,10 @@ class MobilenetPreprocess():
     return next_request
 
 class MobilenetInference():
-  def Setup(self):
-    return
+
+  @staticmethod
+  def Setup():
+    pass
 
   def PreProcess(self, request, istub):
     request_input = tensor_util.MakeNdarray(request.inputs["normalized_image"])
