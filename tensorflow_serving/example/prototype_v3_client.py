@@ -78,6 +78,16 @@ def getFirstStub(route_table):
   first_stub = "%s:%s" % (tmp[1], tmp[2])
   return first_stub
 
+def getClientInput(chain_name):
+  if (chain_name == "chain_mobilenet"):
+    return "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg"
+  elif (chain_name == "chain_nlp_speech"):
+    return "It's well-known that Kobe Bryant is the best basketball player in the world."
+  elif (chain_name == "chain_nlp_transform"):
+    return "It's well-known that Kobe Bryant is the best basketball player in the world."
+  else:
+    return "Error..."
+
 def main(_):
   global route_table
 
@@ -126,30 +136,15 @@ def main(_):
   print("[%s][Client] Received sess_id = %s" % (str(time.time()), sess_id))
   print("                                 first_stub = %s\n" % (first_stub))
 
-  # client sends input requests
-  if (FLAGS.chain_name == "chain_nlp_speech"):
-    input_list = ["It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                ]
-  elif (FLAGS.chain_name == "chain_nlp_transform"):
-    input_list = ["It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
-                ]
-  elif (FLAGS.chain_name == "chain_mobilenet"):
-    input_list = ["/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-                 "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-                 "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-                 # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-                 # "/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/tf_files/flower_photos/daisy/21652746_cc379e0eea_m.jpg",
-                 ]
+  # the duration that this client will keep sending requests
+  sess_duration = 30 #sec
+  
+  t_end = time.time() + sess_duration
+  frame_id = -1
 
-  for frame_id, client_input in enumerate(input_list):
+  while time.time() < t_end:
+    frame_id += 1
+    client_input = getClientInput(FLAGS.chain_name)
     frame_info = "%s-%s" % (sess_id, frame_id)
 
     request = predict_pb2.PredictRequest()
@@ -166,16 +161,9 @@ def main(_):
 
     print("[%s][Client] Ready to send client's %dth input!" % (str(time.time()), frame_id))
 
-    # # sync way
-    # result = cstubs[first_stub].Predict(request, 30.0)
-    # message = tensor_util.MakeNdarray(result.outputs["message"])
-    # print("[%s][Client] Received message %s\n" % (str(time.time()), message))
-
     # async way
-    result_future = cstubs[first_stub].Predict.future(request, 30.0)
+    result_future = cstubs[first_stub].Predict.future(request, 10.0)
     time.sleep(1) # mimic input fps of 1
-
-  # print("[%s][Client] All finished. Please use Ctrl+C to terminate client script." % str(time.time()))
 
   try:
     while True:

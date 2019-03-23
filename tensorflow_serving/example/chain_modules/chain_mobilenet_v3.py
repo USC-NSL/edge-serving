@@ -25,8 +25,8 @@ class MobilenetPreprocess():
   def Apply(self):
     self.internal_result = self.istub.Predict(self.internal_request, 10.0)
 
-    # dumb sleep, in order to study sync vs async stub.Predict()
-    time.sleep(5)
+    # # dumb sleep, in order to study sync vs async stub.Predict()
+    # time.sleep(5)
     
   def PostProcess(self):
     internal_result_value = tensor_util.MakeNdarray(self.internal_result.outputs["normalized_image"])
