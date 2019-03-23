@@ -141,16 +141,18 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
       base_route_table = self.getRouteTable_helper(default_chain_instance, default_chain_profile, resource_map)
       route_table = "%sFINAL:%s" % (base_route_table, client_address)
       return route_table
-    elif (chain_name == "chain_nlp"):
-      default_chain_instance = ["tacotron", "nlpCPU", "deepspeech2", "encoder", "transformer", "decoder"]
-      # default_chain_instance = ["tacotron", "nlpCPU", "deepspeech2", "encoder", "transformer_big", "decoder"]
-      # default_chain_instance = ["tacotron", "nlpCPU", "deepspeech2", "encoder", "conv_s2s", "decoder"]
-      # default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "transformer", "decoder"]
+    elif (chain_name == "chain_nlp_speech"):
+      default_chain_instance = ["tacotron", "nlpCPU", "deepspeech2", "encoder", "transformer_big", "decoder"]
+      # default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "transformer_big", "decoder"]
+      # default_chain_instance = ["tacotron", "nlpCPU", "wave2letter", "encoder", "transformer_big", "decoder"]
+      default_chain_profile = [1000, 1000, 1000, 1000, 1000, 1000, 1000]
+      base_route_table = self.getRouteTable_helper(default_chain_instance, default_chain_profile, resource_map)
+      route_table = "%sFINAL:%s" % (base_route_table, client_address)
+      return route_table
+    elif (chain_name == "chain_nlp_transform"):
+      default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "transformer", "decoder"]
       # default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "transformer_big", "decoder"]
       # default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "conv_s2s", "decoder"]
-      # default_chain_instance = ["tacotron", "nlpCPU", "wave2letter", "encoder", "transformer", "decoder"]
-      # default_chain_instance = ["tacotron", "nlpCPU", "wave2letter", "encoder", "transformer_big", "decoder"]
-      # default_chain_instance = ["tacotron", "nlpCPU", "wave2letter", "encoder", "conv_s2s", "decoder"]
       default_chain_profile = [1000, 1000, 1000, 1000, 1000, 1000, 1000]
       base_route_table = self.getRouteTable_helper(default_chain_instance, default_chain_profile, resource_map)
       route_table = "%sFINAL:%s" % (base_route_table, client_address)

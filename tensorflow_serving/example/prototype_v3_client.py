@@ -56,10 +56,12 @@ class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
         top_k = results.argsort()[-5:][::-1]
         for i in top_k:
           print("    ", labels[i], results[i])
-      elif (request.model_spec.name == "chain_nlp"):
+      elif (request.model_spec.name == "chain_nlp_speech"):
         tt = str(final_result_value).decode('utf-8')
         print(tt)
-
+      elif (request.model_spec.name == "chain_nlp_transform"):
+        tt = str(final_result_value).decode('utf-8')
+        print(tt)
       else:
         print("Not implemented yet...")
 
@@ -125,7 +127,14 @@ def main(_):
   print("                                 first_stub = %s\n" % (first_stub))
 
   # client sends input requests
-  if (FLAGS.chain_name == "chain_nlp"):
+  if (FLAGS.chain_name == "chain_nlp_speech"):
+    input_list = ["It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                  # "It's well-known that Kobe Bryant is the best basketball player in the world.",
+                ]
+  elif (FLAGS.chain_name == "chain_nlp_transform"):
     input_list = ["It's well-known that Kobe Bryant is the best basketball player in the world.",
                   "It's well-known that Kobe Bryant is the best basketball player in the world.",
                   "It's well-known that Kobe Bryant is the best basketball player in the world.",

@@ -4,7 +4,8 @@
     python tensorflow_serving/example/prototype_v3_master.py
     python tensorflow_serving/example/prototype_v3_worker.py --worker localhost:50101
     python tensorflow_serving/example/prototype_v3_client.py --client localhost:50999 --chain_name chain_mobilenet
-    python tensorflow_serving/example/prototype_v3_client.py --client localhost:50999 --chain_name chain_nlp
+    python tensorflow_serving/example/prototype_v3_client.py --client localhost:50999 --chain_name chain_nlp_speech
+    python tensorflow_serving/example/prototype_v3_client.py --client localhost:50999 --chain_name chain_nlp_transform
 
 ==========================================================================================================================================================================
 
