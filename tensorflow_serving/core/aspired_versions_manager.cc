@@ -149,6 +149,7 @@ Status AspiredVersionsManager::Create(
         "AspiredVersionsManager::Options aspired_version_policy must be "
         "non-null");
   }
+
   BasicManager::Options basic_manager_options;
   basic_manager_options.resource_tracker = std::move(options.resource_tracker);
   basic_manager_options.num_load_threads = options.num_load_threads;
@@ -160,6 +161,9 @@ Status AspiredVersionsManager::Create(
       options.flush_filesystem_caches;
   basic_manager_options.servable_event_bus = options.servable_event_bus;
   basic_manager_options.pre_load_hook = std::move(options.pre_load_hook);
+
+  LOG(INFO) << "[Yitao] in aspired_versions_manager.cc, num_load_threads = " << basic_manager_options.num_load_threads;
+
   std::unique_ptr<BasicManager> basic_manager;
   TF_RETURN_IF_ERROR(
       BasicManager::Create(std::move(basic_manager_options), &basic_manager));

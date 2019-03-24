@@ -113,7 +113,9 @@ void ProcessPrometheusRequest(PrometheusExporter* exporter, const string& path,
 class RequestExecutor final : public net_http::EventExecutor {
  public:
   explicit RequestExecutor(int num_threads)
-      : executor_(Env::Default(), "httprestserver", num_threads) {}
+      : executor_(Env::Default(), "httprestserver", num_threads) {
+        LOG(INFO) << "[Yitao] in http_server.cc, num_threads = " << num_threads;
+      }
 
   void Schedule(std::function<void()> fn) override { executor_.Schedule(fn); }
 

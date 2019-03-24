@@ -33,6 +33,7 @@ Status CachingManager::Create(
     Options options, std::unique_ptr<LoaderFactory> loader_factory,
     std::unique_ptr<CachingManager>* caching_manager) {
   // Set up basic manager options from the caching manager options.
+
   BasicManager::Options basic_manager_options;
   basic_manager_options.resource_tracker = std::move(options.resource_tracker);
   basic_manager_options.num_load_threads = options.num_load_threads;
@@ -41,6 +42,8 @@ Status CachingManager::Create(
   basic_manager_options.load_retry_interval_micros =
       options.load_retry_interval_micros;
   basic_manager_options.servable_event_bus = options.servable_event_bus;
+
+  LOG(INFO) << "[Yitao] in caching_manager.cc, num_load_threads = " << basic_manager_options.num_load_threads;
 
   // Create a basic manager and use it to construct the caching manager.
   std::unique_ptr<BasicManager> basic_manager;

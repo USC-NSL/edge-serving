@@ -103,6 +103,7 @@ class ServerCore : public Manager {
     // server startup. This is set high to load up the initial set of models
     // fast, after this the server uses num_load_threads.
     int32 num_initial_load_threads = 4.0 * port::NumSchedulableCPUs();
+    // int32 num_initial_load_threads = 32.0 * port::NumSchedulableCPUs();
 
     // The number of threads used to unload models. If set to 0, then no thread
     // pool is used and unloads are performed serially in the manager thread.

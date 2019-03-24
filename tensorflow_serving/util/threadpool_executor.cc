@@ -20,7 +20,9 @@ namespace serving {
 
 ThreadPoolExecutor::ThreadPoolExecutor(Env* const env, const string& name,
                                        int num_threads)
-    : thread_pool_(env, name, num_threads) {}
+    : thread_pool_(env, name, num_threads) {
+    	LOG(INFO) << "[Yitao] in threadpool_executor.cc, num_threads = " << num_threads;
+    }
 
 ThreadPoolExecutor::~ThreadPoolExecutor() {}
 

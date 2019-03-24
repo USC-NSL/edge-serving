@@ -38,6 +38,7 @@ Status ConnectSourceWithFastInitialLoad(
     ServableStateMonitor* servable_state_monitor,
     const std::vector<ServableRequest>& initial_servables,
     uint32 num_threads = 4 * port::NumSchedulableCPUs());
+    // uint32 num_threads = 32 * port::NumSchedulableCPUs());
 
 // Like ConnectSourceWithFastInitialLoad(), but with multiple sources.
 Status ConnectSourcesWithFastInitialLoad(
@@ -46,6 +47,7 @@ Status ConnectSourcesWithFastInitialLoad(
     ServableStateMonitor* servable_state_monitor,
     const std::vector<ServableRequest>& initial_servables,
     uint32 num_threads = 4 * port::NumSchedulableCPUs());
+    // uint32 num_threads = 32 * port::NumSchedulableCPUs());
 
 ////
 // Implementation detail. API readers may skip.

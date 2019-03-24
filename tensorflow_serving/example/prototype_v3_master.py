@@ -23,7 +23,7 @@ logging.basicConfig()
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 MAX_MESSAGE_LENGTH = 1024 * 1024 * 64
-MAX_WORKERS = 60
+MAX_WORKERS = 600
 
 # # Worker's loaded model set class
 # class WorkerLoadedModelSet():

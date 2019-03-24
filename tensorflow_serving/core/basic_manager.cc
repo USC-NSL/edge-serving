@@ -47,6 +47,7 @@ std::unique_ptr<Executor> CreateExecutor(Env* const env,
   if (num_threads == 0) {
     executor.reset(new InlineExecutor());
   } else {
+    LOG(INFO) << "[Yitao] in basic_manager.cc, num_threads = " << num_threads;
     executor.reset(new ThreadPoolExecutor(env, threadpool_name, num_threads));
   }
   return executor;

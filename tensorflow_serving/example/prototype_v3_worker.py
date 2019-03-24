@@ -43,7 +43,7 @@ from chain_modules.chain_mobilenet_v3 import MobilenetInference
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 MAX_MESSAGE_LENGTH = 1024 * 1024 * 64
-MAX_WORKERS = 60
+MAX_WORKERS = 600
 
 tf.app.flags.DEFINE_string('worker', 'localhost:50101', 'Olympian worker host:port')
 FLAGS = tf.app.flags.FLAGS
@@ -221,7 +221,12 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
         next_result = fstub.Predict(next_request, 30.0)
         fchannel.close()
       else:
-        next_result = self.cstubs[next_stub].Predict(next_request, 30.0)
+        # async way, weird, need to have a time.sleep to guarantee gRPC Predict.future() finished...?
+        next_result = self.cstubs[next_stub].Predict.future(next_request, 10.0)
+        time.sleep(5)
+
+        # # sync way, might lead to timeout...
+        # next_result = self.cstubs[next_stub].Predict(next_request, 30.0)
 
     elif ("model_update_add" in request.inputs):
       print("========== Update(add) ==========")

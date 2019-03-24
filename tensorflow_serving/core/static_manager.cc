@@ -23,6 +23,9 @@ StaticManagerBuilder::StaticManagerBuilder() {
   // We don't want multithreading.
   basic_manager_options.num_load_threads = 0;
   basic_manager_options.num_unload_threads = 0;
+
+  LOG(INFO) << "[Yitao] in static_manager.cc, num_load_threads = " << basic_manager_options.num_load_threads;
+
   const Status basic_manager_status =
       BasicManager::Create(std::move(basic_manager_options), &basic_manager_);
   if (!basic_manager_status.ok()) {
