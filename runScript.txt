@@ -38,6 +38,15 @@
     python tensorflow_serving/example/prototype_v2_worker.py --worker localhost:50102
     python tensorflow_serving/example/prototype_v2_client.py --client localhost:50999 --chain_name chain_nlp
 
+- ActDet
+  - Basic
+    python pipeline.py /home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/indoor_two_ppl.avi
+  - edge
+    tensorflow_model_server --port=8500 --model_name=actdet_ssd --model_base_path=/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_ssd
+
+    tensorflow_model_server --port=8500 --model_config_file=tfserv.conf.actdet
+    python pipeline.py /home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/indoor_two_ppl.avi
+
 - Prometheus
   - NLP
     cd Documents/software/prometheus-2.8.0.linux-amd64
