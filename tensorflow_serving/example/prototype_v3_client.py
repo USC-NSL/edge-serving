@@ -9,6 +9,10 @@ from concurrent import futures
 import tensorflow as tf
 tf.logging.set_verbosity(tf.logging.ERROR)
 
+import sys
+sys.path.append('/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/')
+from modules_actdet.data_reader import DataReader
+
 from tensorflow_serving.apis import predict_pb2
 from tensorflow_serving.apis import olympian_master_pb2_grpc
 from tensorflow_serving.apis import olympian_worker_pb2_grpc
@@ -25,6 +29,10 @@ tf.app.flags.DEFINE_string('chain_name', 'chain_mobilenet', 'name of the chain')
 FLAGS = tf.app.flags.FLAGS
 
 route_table = ""
+
+if (FLAGS.chain_name == "chain_actdet"):
+  actdet_reader = DataReader()
+  actdet_reader.Setup("/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/indoor_two_ppl.avi")
 
 class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
 
@@ -62,6 +70,9 @@ class OlympianClient(olympian_client_pb2_grpc.OlympianClientServicer):
       elif (request.model_spec.name == "chain_nlp_transform"):
         tt = str(final_result_value).decode('utf-8')
         print(tt)
+      elif (request.model_spec.name == "chain_actdet"):
+        output = final_result_value
+        print(output)
       else:
         print("Not implemented yet...")
 
@@ -85,6 +96,10 @@ def getClientInput(chain_name):
     return "It's well-known that Kobe Bryant is the best basketball player in the world."
   elif (chain_name == "chain_nlp_transform"):
     return "It's well-known that Kobe Bryant is the best basketball player in the world."
+  elif (chain_name == "chain_actdet"):
+    global actdet_reader
+    frame_data = actdet_reader.PostProcess()
+    return frame_data['img']
   else:
     return "Error..."
 
@@ -137,21 +152,24 @@ def main(_):
   print("                                 first_stub = %s\n" % (first_stub))
 
   # the duration that this client will keep sending requests
-  sess_duration = 30 #sec
+  sess_duration = 10 #sec
   
   t_end = time.time() + sess_duration
   frame_id = -1
 
-  while time.time() < t_end:
+  # while time.time() < t_end:
+  while frame_id < 48:
     frame_id += 1
     client_input = getClientInput(FLAGS.chain_name)
     frame_info = "%s-%s" % (sess_id, frame_id)
+
+    # print("client_input.dtype = %s" % str(client_input.dtype))
 
     request = predict_pb2.PredictRequest()
     request.model_spec.name = FLAGS.chain_name
     request.model_spec.signature_name = "chain_specification"
     request.inputs["client_input"].CopyFrom(
-      tf.make_tensor_proto(client_input))
+      tf.make_tensor_proto(client_input, dtype = client_input.dtype, shape = client_input.shape))
     request.inputs["frame_info"].CopyFrom(
       tf.make_tensor_proto(frame_info))
     request.inputs["route_table"].CopyFrom(

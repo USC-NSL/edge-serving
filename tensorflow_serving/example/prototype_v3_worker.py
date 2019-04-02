@@ -10,6 +10,7 @@ import tensorflow as tf
 tf.logging.set_verbosity(tf.logging.ERROR)
 
 import sys
+
 sys.path.append('/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/')
 from modules.Tacotron import Tacotron
 from modules.audio_resample import Resample
@@ -21,6 +22,15 @@ from modules.Transformer import Transformer
 from modules.TransformerBig import TransformerBig
 from modules.Convs2s import Convs2s
 from modules.text_decoder import TextDecoder
+
+sys.path.append('/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/')
+sys.path.append('/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/modules_actdet/SSD-Tensorflow')
+sys.path.append('/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/modules_actdet/deep_sort')
+from modules_actdet.data_reader import DataReader
+from modules_actdet.object_detector_ssd import SSD
+from modules_actdet.object_detector_yolo import YOLO
+from modules_actdet.tracker_deepsort import DeepSort
+from modules_actdet.action_detector_acam import ACAM
 
 from tensorflow.python.framework import tensor_util
 
@@ -83,6 +93,9 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
     self.model_path_dict['transformer_big'] = '/home/yitao/Documents/fun-project/tensorflow-related/miniature-winner/models/tf_servable/transformer_big'
     self.model_path_dict['exported_mobilenet_v1_1.0_224_preprocess'] = '/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/exported_mobilenet_v1_1.0_224_preprocess'
     self.model_path_dict['exported_mobilenet_v1_1.0_224_inference'] = '/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/exported_mobilenet_v1_1.0_224_inference'
+    self.model_path_dict['actdet_ssd'] = '/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_ssd'
+    self.model_path_dict['actdet_deepsort'] = '/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_deepsort'
+    self.model_path_dict['actdet_acam'] = '/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_acam'
 
   def callSetup(self, model_update_add_list):
     for module_instance in model_update_add_list.split('-'):
@@ -110,6 +123,12 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
         Convs2s.Setup()
       elif (module_instance == "decoder"):
         TextDecoder.Setup()
+      elif (module_instance == "actdet_ssd"):
+        SSD.Setup()
+      elif (module_instance == "actdet_deepsort"):
+        DeepSort.Setup()
+      elif (module_instance == "actdet_acam"):
+        ACAM.Setup()
 
   def parseRouteTable(self, route_table, route_index):
     tmp = route_table.split("-")
@@ -196,6 +215,15 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
       elif (current_model == "decoder"):
         module_instance = TextDecoder()
 
+      elif (current_model == "actdet_ssd"):
+        module_instance = SSD()
+
+      elif (current_model == "actdet_deepsort"):
+        module_instance = DeepSort()
+
+      elif (current_model == "actdet_acam"):
+        module_instance = ACAM()
+
       else:
         print("[Worker] Error...")
 
@@ -215,7 +243,7 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
       next_request.inputs['route_index'].CopyFrom(
         tf.make_tensor_proto(route_index + 1, dtype=tf.int32))
 
-      if (next_stub == client_address):
+      if (next_stub == client_address): # FINAL
         fchannel = grpc.insecure_channel(next_stub)
         fstub = olympian_client_pb2_grpc.OlympianClientStub(fchannel)
         next_result = fstub.Predict(next_request, 30.0)

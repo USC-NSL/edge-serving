@@ -75,12 +75,20 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
       stub = olympian_master_pb2_grpc.OlympianMasterStub(channel)
       self.cstubs[m] = stub
 
+    self.prometheus_list = []
+    for w in self.worker_list:
+      tmp = w.split(":")
+      # If one machine has two GPUs, this machine will run two workers, each with one TF-Serving
+      # And these two workers, each will have its ip:port in worker_list, so we need two p_address for them.
+      p_address = "%s:%d" % (tmp[0], int(tmp[1]) + 5000)
+      self.prometheus_list.append(p_address)
+
     self.registered_session = []
 
-    self.registered_worker = dict()
+    self.registered_worker_loaded_model_list = dict()
     for w in self.worker_list:
-      # self.registered_worker[w] = WorkerLoadedModelSet(w)
-      self.registered_worker[w] = set()
+      # self.registered_worker_loaded_model_list[w] = WorkerLoadedModelSet(w)
+      self.registered_worker_loaded_model_list[w] = set()
 
     # t = threading.Thread(target = self.retrospect)
     # t.start()
@@ -120,16 +128,8 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
         return "Not implemented yet..."
 
   def getRouteTable(self, chain_name, client_address, sess_requirement):
-    prometheus_list = []
-    for w in self.worker_list:
-      tmp = w.split(":")
-      # If one machine has two GPUs, this machine will run two workers, each with one TF-Serving
-      # And these two workers, each will have its ip:port in worker_list, so we need two p_address for them.
-      p_address = "%s:%d" % (tmp[0], int(tmp[1]) + 5000)
-      prometheus_list.append(p_address)
-
     resource_map = dict()
-    for p in prometheus_list:
+    for p in self.prometheus_list:
       remaining_resource = self.getRemainingResource(p)
       tmp = p.split(":")
       w_address = "%s:%s" % (tmp[0], int(tmp[1]) - 5000)
@@ -138,27 +138,31 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
     if (chain_name == "chain_mobilenet"):
       default_chain_instance = ["exported_mobilenet_v1_1.0_224_preprocess", "exported_mobilenet_v1_1.0_224_inference"]
       default_chain_profile = [1000, 5000]
-      base_route_table = self.getRouteTable_helper(default_chain_instance, default_chain_profile, resource_map)
-      route_table = "%sFINAL:%s" % (base_route_table, client_address)
-      return route_table
+
+    elif (chain_name == "chain_actdet"):
+      # default_chain_instance = ["actdet_ssd", "actdet_deepsort", "actdet_acam"]
+      default_chain_instance = ["actdet_ssd", "actdet_deepsort", "actdet_acam"]
+      # default_chain_profile = [1000, 1000, 1000]
+      default_chain_profile = [1000, 1000, 1000]
+
     elif (chain_name == "chain_nlp_speech"):
       default_chain_instance = ["tacotron", "nlpCPU", "deepspeech2", "encoder", "transformer_big", "decoder"]
       # default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "transformer_big", "decoder"]
       # default_chain_instance = ["tacotron", "nlpCPU", "wave2letter", "encoder", "transformer_big", "decoder"]
       default_chain_profile = [1000, 1000, 1000, 1000, 1000, 1000, 1000]
-      base_route_table = self.getRouteTable_helper(default_chain_instance, default_chain_profile, resource_map)
-      route_table = "%sFINAL:%s" % (base_route_table, client_address)
-      return route_table
+
     elif (chain_name == "chain_nlp_transform"):
       default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "transformer", "decoder"]
       # default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "transformer_big", "decoder"]
       # default_chain_instance = ["tacotron", "nlpCPU", "jasper", "encoder", "conv_s2s", "decoder"]
       default_chain_profile = [1000, 1000, 1000, 1000, 1000, 1000, 1000]
-      base_route_table = self.getRouteTable_helper(default_chain_instance, default_chain_profile, resource_map)
-      route_table = "%sFINAL:%s" % (base_route_table, client_address)
-      return route_table
+
     else:
       return "Error, something is wrong..."
+
+    base_route_table = self.getRouteTable_helper(default_chain_instance, default_chain_profile, resource_map)
+    route_table = "%sFINAL:%s" % (base_route_table, client_address)
+    return route_table
 
   def add_worker_loaded_model(self, route_table):
     myWorkerModelMap = dict()
@@ -170,10 +174,10 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
       if (module_intance in ["FINAL"]):
         continue
       else:
-        if (module_intance in self.registered_worker[w_address]):
+        if (module_intance in self.registered_worker_loaded_model_list[w_address]):
           continue
         else:
-          self.registered_worker[w_address].add(module_intance)
+          self.registered_worker_loaded_model_list[w_address].add(module_intance)
           if (w_address not in myWorkerModelMap):
             myWorkerModelMap[w_address] = ""
           myWorkerModelMap[w_address] += "%s-" % module_intance
@@ -192,7 +196,7 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
 
   def printWorkerModelInfo(self):
     print("[%s][Master] workers' model info is:" % str(time.time()))
-    for w_address, loaded_model_set in self.registered_worker.iteritems():
+    for w_address, loaded_model_set in self.registered_worker_loaded_model_list.iteritems():
       print("%s-%s" % (w_address, str(loaded_model_set)))
 
     print(' ')
