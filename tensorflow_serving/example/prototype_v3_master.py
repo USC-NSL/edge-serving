@@ -141,7 +141,7 @@ class OlympianMaster(olympian_master_pb2_grpc.OlympianMasterServicer):
 
     elif (chain_name == "chain_actdet"):
       # default_chain_instance = ["actdet_ssd", "actdet_deepsort", "actdet_acam"]
-      default_chain_instance = ["actdet_ssd", "actdet_deepsort", "actdet_acam"]
+      default_chain_instance = ["actdet_yolo", "actdet_deepsort", "actdet_acam"]
       # default_chain_profile = [1000, 1000, 1000]
       default_chain_profile = [1000, 1000, 1000]
 

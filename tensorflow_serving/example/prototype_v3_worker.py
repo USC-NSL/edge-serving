@@ -94,6 +94,7 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
     self.model_path_dict['exported_mobilenet_v1_1.0_224_preprocess'] = '/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/exported_mobilenet_v1_1.0_224_preprocess'
     self.model_path_dict['exported_mobilenet_v1_1.0_224_inference'] = '/home/yitao/Documents/fun-project/tensorflow-related/tensorflow-for-poets-2/exported_mobilenet_v1_1.0_224_inference'
     self.model_path_dict['actdet_ssd'] = '/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_ssd'
+    self.model_path_dict['actdet_yolo'] = '/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_yolo'
     self.model_path_dict['actdet_deepsort'] = '/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_deepsort'
     self.model_path_dict['actdet_acam'] = '/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_acam'
 
@@ -125,6 +126,8 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
         TextDecoder.Setup()
       elif (module_instance == "actdet_ssd"):
         SSD.Setup()
+      elif (module_instance == "actdet_yolo"):
+        YOLO.Setup()
       elif (module_instance == "actdet_deepsort"):
         DeepSort.Setup()
       elif (module_instance == "actdet_acam"):
@@ -217,6 +220,9 @@ class OlympianWorker(olympian_worker_pb2_grpc.OlympianWorkerServicer):
 
       elif (current_model == "actdet_ssd"):
         module_instance = SSD()
+
+      elif (current_model == "actdet_yolo"):
+        module_instance = YOLO()
 
       elif (current_model == "actdet_deepsort"):
         module_instance = DeepSort()
