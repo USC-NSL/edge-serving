@@ -10,8 +10,8 @@ model_config_list: {
     model_platform: "tensorflow"
   },
   config: {
-    name: "actdet_deepsort",
-    base_path: "/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_deepsort",
+    name: "actdet_reid",
+    base_path: "/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_reid",
     model_platform: "tensorflow"
   },
   config: {
