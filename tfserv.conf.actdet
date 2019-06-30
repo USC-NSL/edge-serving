@@ -1,22 +1,22 @@
 model_config_list: {
   config: {
     name: "actdet_ssd",
-    base_path: "/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_ssd",
+    base_path: "/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/models/actdet_ssd",
     model_platform: "tensorflow"
   },
   config: {
     name: "actdet_yolo",
-    base_path: "/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_yolo",
+    base_path: "/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/models/actdet_yolo",
     model_platform: "tensorflow"
   },
   config: {
     name: "actdet_reid",
-    base_path: "/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_reid",
+    base_path: "/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/models/actdet_reid",
     model_platform: "tensorflow"
   },
   config: {
     name: "actdet_acam",
-    base_path: "/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/actdet_acam",
+    base_path: "/home/yitao/Documents/fun-project/tensorflow-related/Caesar-Edge/models/actdet_acam",
     model_platform: "tensorflow"
   }
 }
