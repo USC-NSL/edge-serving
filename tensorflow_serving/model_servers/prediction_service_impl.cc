@@ -51,6 +51,9 @@ int DeadlineToTimeoutMillis(const gpr_timespec deadline) {
   if (!status.ok()) {
     VLOG(1) << "Predict failed: " << status.error_message();
   }
+
+  LOG(INFO) << "[Yitao] *** Predict() finished for model " << tmp.model_spec().name() << "! ***";
+
   return status;
 }
 
